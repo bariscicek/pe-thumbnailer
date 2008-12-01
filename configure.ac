@@ -1,0 +1,22 @@
+AC_PREREQ(2.52)
+AC_INIT(pe-thumbnailer, 0.1, http://example.com)
+AC_CONFIG_SRCDIR(main.c)
+
+AM_INIT_AUTOMAKE([1.8 dist-bzip2 no-dist-gzip])
+
+AM_MAINTAINER_MODE
+AC_PROG_INSTALL
+
+AC_PROG_CC
+
+PKG_CHECK_MODULES(PE_THUMBNAILER, [
+gtk+-2.0 >= 2.0,
+gio-2.0 >= 2.0
+])
+
+AC_SUBST(PE_THUMBNAILER_CFLAGS)
+AC_SUBST(PE_THUMBNAILER_LIBS)
+
+AC_OUTPUT([
+Makefile
+])
