@@ -21,14 +21,17 @@ typedef struct _resource_directory_table_struct resource_directory_table;
 typedef struct _resource_directory_entries_struct resource_directory_entries;
 typedef struct _resource_directory_string_struct resource_directory_string;
 typedef struct _resource_data_entry_struct  resource_data_entry;
-typedef struct _resource_directory_entry_row_struct resource_directory_entry_row;
 
 void    dump_directory_table (goffset root_rva,
         GInputStream *fis,
         GError *error);
 
 
-
+void
+extract_icon (goffset root_rva,
+							gint virtualaddress,
+              GInputStream *fis,
+              GError *error);
 
 
 goffset
@@ -364,6 +367,7 @@ main (int argc, gchar **argv)
         root_rva = g_seekable_tell (G_SEEKABLE (fis));
         resource_directory_table tbt, tbn, tbl;
         dump_directory_table (root_rva, fis, error);
+				extract_icon (root_rva, rsrc_table.virtualaddress, fis, error);
 
     }
     
@@ -374,15 +378,19 @@ main (int argc, gchar **argv)
 
 void
 extract_icon (goffset root_rva,
+							gint virtualaddress,
               GInputStream *fis,
               GError *error)
 {
     /*
      * MSDN states that Windows NT uses the first GROUP_ICON for exe icon so extract it.
-     * RT_GROUP_ICON has id of 0x14.
+     * RT_GROUP_ICON has id of 0xe.
      */
     resource_directory_table    type, name, language;
     resource_directory_entries  e1, e2, e3;
+		resource_data_entry icon_data_entry;
+		GFile *icon_file;
+		GOutputStream *fos;
     gint readcount;
     gint i, j, k;
     goffset orig_offset;
@@ -399,13 +407,14 @@ extract_icon (goffset root_rva,
             readcount = g_input_stream_read (fis, &e1, sizeof (resource_directory_entries), NULL, &error);
             if (readcount > 0 && error == NULL)
             {
-                if (!e1.name.isname && e1.id == 0x14)
+                if (!e1.nameoridrva.name.isname && e1.nameoridrva.id == 0x3)
                 {
-                    if (e1.data.isdirectory)
+										g_warning ("found rt_icon_group");
+                    if (e1.data.directory.isdirectory)
                     {
                         goffset table_start;
                         table_start = g_seekable_tell (G_SEEKABLE (fis));
-                        g_seekable_seek (G_SEEKABLE (fis), root_rva + e1.data.offsetofdirectory, G_SEEK_SET, NULL, &error);
+                        g_seekable_seek (G_SEEKABLE (fis), root_rva + e1.data.directory.offsetofdirectory, G_SEEK_SET, NULL, &error);
                         g_assert (error == NULL);
                         
                         readcount = g_input_stream_read (fis, &name, sizeof (resource_directory_table), NULL, &error);
@@ -413,28 +422,70 @@ extract_icon (goffset root_rva,
                         {
                             for (k = 0; k < name.numberofidentries + name.numberofnameentries; k++)
                             {
+                                goffset table2_start;
+                                table2_start = g_seekable_tell (G_SEEKABLE (fis));
+
                                 readcount = g_input_stream_read (fis, &e2, sizeof (resource_directory_entries), NULL, &error);
-                                if (readcound > 0 && error == NULL)
+                                if (readcount > 0 && error == NULL)
                                 {
-                                    if (e2.data.isdirectory)
+                                    if (e2.data.directory.isdirectory)
                                     {
-                                        goffset table2_start;
-                                        table2_start = g_seekable_tell (G_SEEKABLE (fis));
-                                        g_seekable_seek (G_SEEKABLE (fis), root_rva + e2.data.offsetofdirectory, G_SEEK_SET, NULL, &error);
+                                        g_seekable_seek (G_SEEKABLE (fis), root_rva + e2.data.directory.offsetofdirectory, G_SEEK_SET, NULL, &error);
                                         g_assert (error == NULL);
                                         
                                         readcount = g_input_stream_read (fis, &language, sizeof (resource_directory_table), NULL, &error);
                                         if (readcount > 0 && error == NULL)
                                         {
-                                            /* language data entry */
+																						for (j = 0; j < language.numberofidentries + language.numberofnameentries; j++)
+																						{
+																								readcount = g_input_stream_read (fis, &e3, sizeof (resource_directory_entries), NULL, &error);
+																								if (readcount > 0 && error == NULL)
+																								{																									
+																										if (!e3.data.directory.isdirectory)
+																										{
+																												goffset table3_start;
+																												table3_start = g_seekable_tell (G_SEEKABLE (fis));
+																												g_seekable_seek (G_SEEKABLE (fis), root_rva + e3.data.offsetofdata, G_SEEK_SET, NULL, &error);
+																												g_assert (error == NULL);
+																										
+																												readcount = g_input_stream_read (fis, &icon_data_entry, sizeof (resource_data_entry), NULL, &error);
+																												if (readcount > 0 && error == NULL)
+																												{
+																														g_printf ("RVA of %s data: %x and size: %x codepage: %x, readcount: %x\n", 
+																																			get_resource_type (e3.nameoridrva.id),
+																																			icon_data_entry.datarva, 
+																																			icon_data_entry.size, 
+																																			icon_data_entry.codepage, 
+																																			readcount);
+																												}
+																												g_seekable_seek (G_SEEKABLE (fis), table3_start, G_SEEK_SET, NULL, &error);
+																												g_assert (error == NULL);
+																										}
+																								}
+																						}
                                         }
+																				g_seekable_seek (G_SEEKABLE (fis), table2_start, G_SEEK_SET, NULL, &error);
+																				
                                         
                                     }
                                     else
                                     {
-                                        /* not directory */
+																				goffset table3_start;
+																				table3_start = g_seekable_tell (G_SEEKABLE (fis));
+																				
+																				g_seekable_seek (G_SEEKABLE (fis), e2.data.directory.offsetofdirectory, G_SEEK_SET, NULL, &error);
+																				g_assert (error == NULL);
+																		
+																				readcount = g_input_stream_read (fis, &icon_data_entry, sizeof (resource_data_entry), NULL, &error);
+																				if (readcount > 0 && error == NULL)
+																				{
+																						g_printf ("RVA of icon group data: %x and size: %x\n", icon_data_entry.datarva, icon_data_entry.size);
+																				}
+																				g_seekable_seek (G_SEEKABLE (fis), table3_start, G_SEEK_SET, NULL, &error);
+																				g_assert (error == NULL);
                                     }
                                 }
+																
                                 g_seekable_seek (G_SEEKABLE (fis), table2_start, G_SEEK_SET, NULL, &error);
                                 g_assert (error == NULL);
                             }
@@ -452,6 +503,42 @@ extract_icon (goffset root_rva,
             }
         }
     }
+		
+		if (icon_data_entry.datarva > 0)
+		{
+				
+				gchar *read_buffer;
+				
+				icon_file = g_file_new_for_path ("exe.xpm");
+				fos = (GOutputStream *) g_file_append_to (icon_file, G_FILE_CREATE_PRIVATE, NULL, &error);
+				g_assert (error == NULL);
+				
+				read_buffer = g_malloc0 (icon_data_entry.size);
+				g_seekable_seek (G_SEEKABLE (fis), root_rva + icon_data_entry.datarva - virtualaddress, G_SEEK_SET, NULL, &error);
+				g_assert (error == NULL);
+				g_warning ("%x", icon_data_entry.datarva);
+				readcount = g_input_stream_read (fis, read_buffer, icon_data_entry.size, NULL, &error);
+				if (readcount > 0 && error == NULL)
+				{
+						gint nHeight;
+						gint nXORWidthBytes;
+						gint nANDWidthBytes;
+						gboolean b8BitColors;
+						gint nColors;
+						guchar *pXOR;
+						guchar *pAND;
+						gboolean aColorUsed[256] = {0};
+						gint nColorUsed = 0;
+						gint i, j;
+						gchar *comment;
+						BITMAPINFO *bitmap_info; 		
+						
+						bitmap_info = (BITMAPINFO *) read_buffer;
+						g_warning ("%d", bitmap_info->bmiHeader.biHeight);
+						
+				}
+			
+		}
     
 }
 
@@ -530,7 +617,7 @@ dump_directory_table (goffset root_rva,
                                                         get_resource_type(entry1.nameoridrva.id));
                                             g_printf ("\t");
                                             if (entry2.nameoridrva.name.isname)
-                                                g_printf ("Name=\"%s\"", name);
+                                                g_printf ("Name=\"%s\"", get_resource_string (root_rva, entry2.nameoridrva.name.offsetofname, fis));
                                             else
                                                 g_printf ("Name=%x",
                                                         entry2.nameoridrva.id);

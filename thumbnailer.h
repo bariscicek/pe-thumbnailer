@@ -171,37 +171,7 @@ struct _resource_data_entry_struct
     gint32  reserved1;
 };
 
-/*
- *  Resource directory entry row
- */
 
-struct _resource_directory_entry_row_struct
-{
-    gboolean typeisstring;
-    gboolean nameisstring;
-    gboolean languageisstring;
-    union
-    {
-        gchar *string;
-        gint32  id;
-    } type;
-    union
-    {
-        gchar *string;
-        gint32  id;
-    } name;
-    union
-    {
-        gchar *string;
-        gint32 id;
-    } language;
-    gint32  offsetofdata;
-};
-
-
-#define RESOURCE_DIRECTORY_TYPE     0
-#define RESOURCE_DIRECTORY_NAME     1
-#define RESOURCE_DIRECTORY_LANGUAGE 2
 /*
  *  Taken from wine/include/wingdi.h
  */
@@ -233,6 +203,24 @@ typedef struct {
     BITMAPINFOHEADER    bmiHeader;
     RGBQUAD             bmiColors[1];
 } BITMAPINFO;
+
+typedef struct {
+		guchar	bWidth;
+		guchar	bHeight;
+		guchar	bColorCount;
+		guchar	bReserved;
+		gint16	wPlanes;
+		gint16	wBitCount;
+		gint32	dwBytesInRes;
+		gint32	dwImageOffset;
+} ICONDIRENTRY;
+
+typedef struct {
+		gint16	idReserved;
+		gint16	idType;
+		gint16	idCount;
+		ICONDIRENTRY		idEntries[1];
+} ICONDIR;
 
 
 

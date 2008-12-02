@@ -80,7 +80,7 @@ AUTOMAKE = ${SHELL} /home/draco/Codes/pe-thumbnailer/missing --run automake-1.10
 AWK = gawk
 CC = gcc
 CCDEPMODE = depmode=gcc3
-CFLAGS = -g
+CFLAGS = -g -O2
 CPPFLAGS = 
 CYGPATH_W = echo
 DEFS = -DPACKAGE_NAME=\"pe-thumbnailer\" -DPACKAGE_TARNAME=\"pe-thumbnailer\" -DPACKAGE_VERSION=\"0.1\" -DPACKAGE_STRING=\"pe-thumbnailer\ 0.1\" -DPACKAGE_BUGREPORT=\"http://example.com\" -DPACKAGE=\"pe-thumbnailer\" -DVERSION=\"0.1\"
@@ -109,8 +109,8 @@ PACKAGE_STRING = pe-thumbnailer 0.1
 PACKAGE_TARNAME = pe-thumbnailer
 PACKAGE_VERSION = 0.1
 PATH_SEPARATOR = :
-PE_THUMBNAILER_CFLAGS = -I/usr/include/gtk-2.0 -I/usr/lib64/gtk-2.0/include -I/usr/include/atk-1.0 -I/usr/include/cairo -I/usr/include/pango-1.0 -I/usr/include/glib-2.0 -I/usr/lib64/glib-2.0/include  
-PE_THUMBNAILER_LIBS = -lgtk-x11-2.0 -lgdk-x11-2.0 -latk-1.0 -lgdk_pixbuf-2.0 -lpangocairo-1.0 -lpango-1.0 -lcairo -lgio-2.0 -lgobject-2.0 -lgmodule-2.0 -ldl -lglib-2.0  
+PE_THUMBNAILER_CFLAGS = -I/usr/include/gtk-2.0 -I/usr/lib64/gtk-2.0/include -I/usr/include/atk-1.0 -I/usr/include/cairo -I/usr/include/pango-1.0 -I/usr/include/glib-2.0 -I/usr/lib64/glib-2.0/include -I/usr/include/freetype2  
+PE_THUMBNAILER_LIBS = -lgtk-x11-2.0 -lgdk-x11-2.0 -latk-1.0 -lpangoft2-1.0 -lgdk_pixbuf-2.0 -lpangocairo-1.0 -lcairo -lpango-1.0 -lfreetype -lfontconfig -lgio-2.0 -lgobject-2.0 -lgmodule-2.0 -lglib-2.0  
 PKG_CONFIG = /usr/bin/pkg-config
 SET_MAKE = 
 SHELL = /bin/sh
