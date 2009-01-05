@@ -1,0 +1,29 @@
+<gconfschemafile>
+    <schemalist>
+
+        <schema>
+            <key>/schemas/desktop/gnome/thumbnailers/application@x-ms-dos-executable/enable</key>
+            <applyto>/desktop/gnome/thumbnailers/application@x-ms-dos-executable/enable</applyto>
+            <owner>thumbnailer</owner>
+            <type>bool</type>
+            <default>true</default>
+            <locale name="C">
+                <short>Enable thumbnailing of ms-dos executable files</short>
+                <long>Enable thumbnailing of ms-dos executable files</long>
+            </locale>
+        </schema>
+
+        <schema>
+            <key>/schemas/desktop/gnome/thumbnailers/application@x-ms-dos-executable/command</key>
+            <applyto>/desktop/gnome/thumbnailers/application@x-ms-dos-executable/command</applyto>
+            <owner>thumbnailer</owner>
+            <type>string</type>
+            <default>/home/draco/Codes/pe-thumbnailer/pe-thumbnailer %u %o</default>
+            <locale name="C">
+                <short>Create thumbnail for ms-dos executable files</short>
+                <long>Create thumbnail for ms-dos executable files</long>
+            </locale>
+        </schema>
+
+    </schemalist>
+</gconfschemafile>
